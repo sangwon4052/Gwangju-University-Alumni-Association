@@ -138,6 +138,7 @@
         <span class="nav-link" id="nav-register" onclick="showPage('register')">회원가입</span>
         <span class="nav-link" id="nav-events" onclick="showPage('events')">행사안내</span>
         <span class="nav-link" id="nav-suggestions" onclick="showPage('suggestions')">건의사항</span>
+        <span class="nav-link" id="nav-donations" onclick="showPage('donations')">동문기부</span>
       </nav>
       <div style="display:flex;align-items:center;gap:8px">
         <div id="admin-badge" class="hidden" style="display:flex;align-items:center;gap:8px">
@@ -154,6 +155,7 @@
       <span class="nav-link" onclick="showPage('register');toggleMobile()">회원가입</span>
       <span class="nav-link" onclick="showPage('events');toggleMobile()">행사안내</span>
       <span class="nav-link" onclick="showPage('suggestions');toggleMobile()">건의사항</span>
+      <span class="nav-link" onclick="showPage('donations');toggleMobile()">동문기부</span>
     </div>
   </div>
 </header>
@@ -174,12 +176,20 @@
         <button class="btn-primary" style="background:#4ea3d8;font-size:15px" onclick="showPage('register')">회원가입</button>
         <button style="background:transparent;color:white;border:2px solid rgba(255,255,255,0.5);padding:10px 24px;border-radius:8px;cursor:pointer;font-size:15px;font-weight:800;font-family:'Nanum Gothic',sans-serif" onclick="showPage('alumni')">총동문회 소개</button>
       </div>
-      <div class="member-badge" onclick="openMemberDir()" style="cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
-        <span style="font-size:20px">👥</span>
-        <span style="color:white;font-weight:800;font-size:15px">가입 동문</span>
-        <span class="member-count" id="member-count">0</span>
-        <span style="color:rgba(255,255,255,0.8);font-weight:700;font-size:14px">명</span>
-        <span style="color:rgba(255,255,255,0.6);font-size:12px">▶ 명부보기</span>
+      <div style="display:flex;gap:12px;flex-wrap:wrap">
+        <div class="member-badge" onclick="openMemberDir()" style="cursor:pointer;transition:all 0.2s" onmouseover="this.style.background='rgba(255,255,255,0.22)'" onmouseout="this.style.background='rgba(255,255,255,0.12)'">
+          <span style="font-size:20px">👥</span>
+          <span style="color:white;font-weight:800;font-size:15px">가입 동문</span>
+          <span class="member-count" id="member-count">0</span>
+          <span style="color:rgba(255,255,255,0.8);font-weight:700;font-size:14px">명</span>
+          <span style="color:rgba(255,255,255,0.6);font-size:12px">▶ 명부보기</span>
+        </div>
+        <div class="member-badge">
+          <span style="font-size:20px">💰</span>
+          <span style="color:white;font-weight:800;font-size:15px">누적 기부금</span>
+          <span class="member-count" id="donation-total">0</span>
+          <span style="color:rgba(255,255,255,0.8);font-weight:700;font-size:14px">원</span>
+        </div>
       </div>
     </div>
   </div>
@@ -362,7 +372,90 @@
   </div>
   <div class="sub-title">건의사항 목록 (<span id="suggest-count">0</span>건)</div>
   <div id="suggestions-list"></div>
+
+<!-- ===== DONATIONS PAGE ===== -->
+<div id="page-donations" class="fadein hidden">
+  <h1 class="section-title">동문기부</h1>
+  <div id="donation-success" class="alert-success hidden">✅ 기부 신청이 완료되었습니다. 감사합니다!</div>
+  <div class="card">
+    <div class="sub-title">기부 신청</div>
+    <p style="color:#5a8aa8;font-size:14px;margin-bottom:20px;line-height:1.9">동문 여러분의 따뜻한 나눔이 모교 발전에 큰 힘이 됩니다.</p>
+    <div class="form-grid">
+      <div class="form-group">
+        <label>학과 *</label>
+        <input id="d-dept" placeholder="학과명 입력">
+        <div class="error-text hidden" id="err-d-dept">학과를 입력하세요</div>
+      </div>
+      <div class="form-group">
+        <label>동문명 *</label>
+        <input id="d-name" placeholder="성함 입력">
+        <div class="error-text hidden" id="err-d-name">동문명을 입력하세요</div>
+      </div>
+      <div class="form-group">
+        <label>기부금 (원) *</label>
+        <input id="d-amount" type="number" placeholder="기부 금액 입력 (예: 100000)">
+        <div class="error-text hidden" id="err-d-amount">기부금을 입력하세요</div>
+      </div>
+      <div class="form-group">
+        <label>영수증 종류 *</label>
+        <select id="d-receipt-type" onchange="toggleReceiptFields()">
+          <option value="">선택하세요</option>
+          <option value="현금">현금영수증</option>
+          <option value="세금계산서">세금계산서</option>
+        </select>
+        <div class="error-text hidden" id="err-d-receipt-type">영수증 종류를 선택하세요</div>
+      </div>
+    </div>
+    
+    <!-- 현금영수증 필드 -->
+    <div id="cash-receipt-fields" class="hidden" style="margin-top:16px">
+      <div class="form-group">
+        <label>휴대폰 번호 *</label>
+        <input id="d-phone" placeholder="010-0000-0000">
+        <div class="error-text hidden" id="err-d-phone">휴대폰 번호를 입력하세요</div>
+      </div>
+    </div>
+    
+    <!-- 세금계산서 필드 -->
+    <div id="tax-receipt-fields" class="hidden" style="margin-top:16px">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>사업자등록번호 *</label>
+          <input id="d-business-no" placeholder="000-00-00000">
+          <div class="error-text hidden" id="err-d-business-no">사업자등록번호를 입력하세요</div>
+        </div>
+        <div class="form-group">
+          <label>이메일 *</label>
+          <input id="d-email" type="email" placeholder="이메일 입력">
+          <div class="error-text hidden" id="err-d-email">이메일을 입력하세요</div>
+        </div>
+      </div>
+    </div>
+    
+    <button class="btn-primary" style="margin-top:20px;width:100%;padding:13px;font-size:15px" onclick="submitDonation()">기부 신청</button>
+  </div>
+  
+  <div id="admin-donation-section" class="hidden">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px">
+        <div class="sub-title" style="margin-bottom:0">기부 내역 (<span id="donation-count">0</span>건 / 총액: <span id="donation-sum">0</span>원)</div>
+        <button class="btn-green" onclick="exportDonationCSV()">📥 엑셀 다운로드</button>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="data-table">
+          <thead><tr>
+            <th>번호</th><th>학과</th><th>동문명</th><th>기부금</th><th>영수증</th><th>연락처/사업자번호</th><th>이메일</th><th>신청일</th><th>삭제</th>
+          </tr></thead>
+          <tbody id="donation-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  
+  <div class="sub-title" style="margin-top:24px">최근 기부 내역 (<span id="public-donation-count">0</span>건)</div>
+  <div id="donations-list"></div>
 </div>
+
 
 </main>
 
@@ -479,7 +572,7 @@ function setDataKey(key, val) {
 
 // ============ NAVIGATION ============
 function showPage(p) {
-  ['home','alumni','register','events','suggestions'].forEach(id => {
+  ['home','alumni','register','events','suggestions','donations'].forEach(id => {
     document.getElementById('page-'+id).classList.add('hidden');
     const n = document.getElementById('nav-'+id);
     if(n) { n.classList.remove('active'); }
@@ -494,6 +587,7 @@ function showPage(p) {
   if(p==='register') renderRegisterPage();
   if(p==='events') renderEvents();
   if(p==='suggestions') renderSuggestions();
+  if(p==='donations') renderDonations();
 }
 
 function toggleMobile() {
@@ -532,9 +626,17 @@ function logout() {
 }
 
 // ============ HOME ============
-function renderHome() {
+
+function updateMemberCount() {
   const members = getData('members',[]);
-  document.getElementById('member-count').textContent = members.length;
+  const el = document.getElementById('member-count');
+  if(el) el.textContent = members.length;
+}
+
+function renderHome() {
+  updateMemberCount();
+  updateDonationTotal();
+  const members = getData('members',[]);
   const events = getData('events',[]);
   const el = document.getElementById('home-events-list');
   if(events.length===0) {
@@ -594,7 +696,7 @@ function renderTab(tab) {
             <div><div class="file-name">${item.name}</div><div class="file-date">${item.date}</div></div>
           </div>
           <div style="display:flex;gap:8px;align-items:center">
-            ${item.type==='image'&&item.src?`<a href="${item.src}" download="${item.name}"><button class="btn-outline" style="padding:4px 12px;font-size:12px">다운로드</button></a>`:''}
+            ${item.src?`<a href="${item.src}" download="${item.name}" target="_blank"><button class="btn-outline" style="padding:4px 12px;font-size:12px">${item.type==='image'?'보기':'다운로드'}</button></a>`:''}
             ${isAdmin?`<button class="btn-danger" onclick="deleteListItem('${tab}',${item.id})">삭제</button>`:''}
           </div>
         </div>`).join('')}</div>`;
@@ -874,6 +976,179 @@ document.getElementById('member-dir-modal').addEventListener('click', function(e
 renderHome();
 renderEvents();
 renderSuggestions();
+
+// ============ DONATIONS ============
+function toggleReceiptFields() {
+  const type = document.getElementById('d-receipt-type').value;
+  const cashFields = document.getElementById('cash-receipt-fields');
+  const taxFields = document.getElementById('tax-receipt-fields');
+  
+  if(type === '현금') {
+    cashFields.classList.remove('hidden');
+    taxFields.classList.add('hidden');
+  } else if(type === '세금계산서') {
+    cashFields.classList.add('hidden');
+    taxFields.classList.remove('hidden');
+  } else {
+    cashFields.classList.add('hidden');
+    taxFields.classList.add('hidden');
+  }
+}
+
+function submitDonation() {
+  // 에러 메시지 초기화
+  ['d-dept','d-name','d-amount','d-receipt-type','d-phone','d-business-no','d-email'].forEach(id => {
+    document.getElementById('err-'+id)?.classList.add('hidden');
+  });
+  
+  const dept = document.getElementById('d-dept').value.trim();
+  const name = document.getElementById('d-name').value.trim();
+  const amount = parseInt(document.getElementById('d-amount').value);
+  const receiptType = document.getElementById('d-receipt-type').value;
+  
+  let valid = true;
+  
+  if(!dept) { document.getElementById('err-d-dept').classList.remove('hidden'); valid=false; }
+  if(!name) { document.getElementById('err-d-name').classList.remove('hidden'); valid=false; }
+  if(!amount || amount <= 0) { document.getElementById('err-d-amount').classList.remove('hidden'); valid=false; }
+  if(!receiptType) { document.getElementById('err-d-receipt-type').classList.remove('hidden'); valid=false; }
+  
+  let phone = '';
+  let businessNo = '';
+  let email = '';
+  
+  if(receiptType === '현금') {
+    phone = document.getElementById('d-phone').value.trim();
+    if(!phone) { document.getElementById('err-d-phone').classList.remove('hidden'); valid=false; }
+  } else if(receiptType === '세금계산서') {
+    businessNo = document.getElementById('d-business-no').value.trim();
+    email = document.getElementById('d-email').value.trim();
+    if(!businessNo) { document.getElementById('err-d-business-no').classList.remove('hidden'); valid=false; }
+    if(!email) { document.getElementById('err-d-email').classList.remove('hidden'); valid=false; }
+  }
+  
+  if(!valid) return;
+  
+  const donations = getData('donations', []);
+  donations.push({
+    dept, name, amount, receiptType, phone, businessNo, email,
+    date: new Date().toLocaleDateString('ko-KR')
+  });
+  setDataKey('donations', donations);
+  
+  // 폼 초기화
+  ['d-dept','d-name','d-amount','d-receipt-type','d-phone','d-business-no','d-email'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.value = '';
+  });
+  document.getElementById('cash-receipt-fields').classList.add('hidden');
+  document.getElementById('tax-receipt-fields').classList.add('hidden');
+  
+  // 성공 메시지
+  const successEl = document.getElementById('donation-success');
+  successEl.classList.remove('hidden');
+  setTimeout(() => successEl.classList.add('hidden'), 3000);
+  
+  renderDonations();
+  updateDonationTotal();
+}
+
+function renderDonations() {
+  const donations = getData('donations', []);
+  
+  // 관리자 섹션
+  if(isAdmin) {
+    document.getElementById('admin-donation-section').classList.remove('hidden');
+    const tbody = document.getElementById('donation-tbody');
+    tbody.innerHTML = '';
+    
+    let totalAmount = 0;
+    donations.forEach((d, i) => {
+      totalAmount += d.amount;
+      const contactInfo = d.receiptType === '현금' ? d.phone : d.businessNo;
+      tbody.innerHTML += `
+        <tr>
+          <td>${i+1}</td>
+          <td>${d.dept}</td>
+          <td>${d.name}</td>
+          <td>${d.amount.toLocaleString()}</td>
+          <td><span class="tag-blue">${d.receiptType}</span></td>
+          <td>${contactInfo}</td>
+          <td>${d.email || '-'}</td>
+          <td>${d.date}</td>
+          <td><button class="btn-danger" onclick="deleteDonation(${i})">삭제</button></td>
+        </tr>
+      `;
+    });
+    
+    document.getElementById('donation-count').textContent = donations.length;
+    document.getElementById('donation-sum').textContent = totalAmount.toLocaleString();
+  } else {
+    document.getElementById('admin-donation-section').classList.add('hidden');
+  }
+  
+  // 공개 목록 (최근 10개)
+  const listEl = document.getElementById('donations-list');
+  const publicDonations = donations.slice(-10).reverse();
+  
+  if(publicDonations.length === 0) {
+    listEl.innerHTML = '<div class="card"><p style="color:#888;text-align:center">등록된 기부 내역이 없습니다.</p></div>';
+  } else {
+    listEl.innerHTML = publicDonations.map(d => `
+      <div class="card" style="margin-bottom:12px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <div>
+            <div style="font-weight:800;color:#1a3a6b;margin-bottom:4px">${d.name} 동문 (${d.dept})</div>
+            <div style="font-size:14px;color:#5a8aa8">💰 ${d.amount.toLocaleString()}원</div>
+          </div>
+          <div style="text-align:right">
+            <span class="tag-blue">${d.receiptType}</span>
+            <div style="font-size:12px;color:#888;margin-top:4px">${d.date}</div>
+          </div>
+        </div>
+      </div>
+    `).join('');
+  }
+  
+  document.getElementById('public-donation-count').textContent = donations.length;
+}
+
+function deleteDonation(idx) {
+  if(!confirm('이 기부 내역을 삭제하시겠습니까?')) return;
+  const donations = getData('donations', []);
+  donations.splice(idx, 1);
+  setDataKey('donations', donations);
+  renderDonations();
+  updateDonationTotal();
+}
+
+function exportDonationCSV() {
+  const donations = getData('donations', []);
+  if(donations.length === 0) { alert('내보낼 데이터가 없습니다.'); return; }
+  
+  const headers = ['번호','학과','동문명','기부금','영수증종류','연락처/사업자번호','이메일','신청일'];
+  let csv = headers.join(',') + '\n';
+  
+  donations.forEach((d, i) => {
+    const contactInfo = d.receiptType === '현금' ? d.phone : d.businessNo;
+    csv += `${i+1},${d.dept},${d.name},${d.amount},${d.receiptType},${contactInfo},${d.email || '-'},${d.date}\n`;
+  });
+  
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = `동문기부_${new Date().toLocaleDateString('ko-KR').replace(/\./g,'')}.csv`;
+  link.click();
+}
+
+function updateDonationTotal() {
+  const donations = getData('donations', []);
+  const total = donations.reduce((sum, d) => sum + d.amount, 0);
+  const el = document.getElementById('donation-total');
+  if(el) el.textContent = total.toLocaleString();
+}
+
+
 </script>
 </body>
 </html>
