@@ -691,7 +691,13 @@ function uploadSingle(tab) {
     const reader = new FileReader();
     reader.onload = ev => {
       const isImg = file.type.startsWith('image/');
-      setDataKey(tab, {src:isImg?ev.target.result:null, name:file.name, date:new Date().toLocaleDateString('ko-KR'), type:isImg?'image':'file'});
+      setDataKey(tab, {
+        src: ev.target.result,
+        data: ev.target.result,
+        name: file.name, 
+        date: new Date().toLocaleDateString('ko-KR'), 
+        type: isImg ? 'image' : 'file'
+      });
       renderTab(tab);
     };
     reader.readAsDataURL(file);
@@ -706,9 +712,15 @@ function uploadList(tab) {
     const file = e.target.files[0]; if(!file) return;
     const reader = new FileReader();
     reader.onload = ev => {
-      const isImg = file.type.startsWith('image/');
       const items = getData(tab,[]);
-      items.push({id:Date.now(), name:file.name, date:new Date().toLocaleDateString('ko-KR'), src:isImg?ev.target.result:null, type:isImg?'image':'file'});
+      items.push({
+        id:Date.now(), 
+        name:file.name, 
+        date:new Date().toLocaleDateString('ko-KR'), 
+        data:ev.target.result,
+        src:ev.target.result,
+        type:file.type
+      });
       setDataKey(tab, items);
       renderTab(tab);
     };
